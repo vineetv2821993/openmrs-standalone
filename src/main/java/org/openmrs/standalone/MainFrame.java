@@ -35,6 +35,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -60,6 +61,9 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+
+
+
 
 import org.openmrs.standalone.ApplicationController.DatabaseMode;
 
@@ -204,7 +208,6 @@ public class MainFrame extends javax.swing.JFrame implements ActionListener, Use
 		});
 		
 		fileMenu.add(quitMenuItem);
-		
 		menuBar.add(fileMenu);
 		
 		setJMenuBar(menuBar);
@@ -272,7 +275,27 @@ public class MainFrame extends javax.swing.JFrame implements ActionListener, Use
 		mainPanel.add(scrolltxt, c);
 		
 		add(mainPanel);
-		
+		try{
+			if (System.getProperty("os.name").startsWith("Mac OS X")) {
+				//no paramater
+				Class noparams[] = {};
+			 
+				//Image parameter
+				Class[] paramImage = new Class[1];	
+				paramImage[0] = Image.class;
+				
+				Class Application = Class.forName("com.apple.eawt.Application");
+				Object application = Application.newInstance();
+				Method getApplication = Application.getDeclaredMethod("getApplication", noparams);
+				application = getApplication.invoke(null, null);
+				Method setDockIconImage = Application.getDeclaredMethod("setDockIconImage", paramImage);
+				Image image = Toolkit.getDefaultToolkit().getImage("src/main/resources/org/openmrs/standalone/openmrs_logo_white.gif");
+				setDockIconImage.invoke(application, image);
+			}
+		}
+		catch (Exception e) {
+				e.printStackTrace();
+		}
 		try {
 			setIconImage(ImageIO.read(getClass().getResource("openmrs_logo_white.gif")));
 		}
@@ -342,6 +365,7 @@ public class MainFrame extends javax.swing.JFrame implements ActionListener, Use
 				tomcatPort = StandaloneUtil.fromStringToInt(txtTomcatPort.getText());
 				
 				btnStart.setEnabled(false);
+				
 				btnStop.setEnabled(true);
 
 				txtTomcatPort.setEnabled(false);
@@ -362,7 +386,7 @@ public class MainFrame extends javax.swing.JFrame implements ActionListener, Use
 				appController.stop();
 				
 				btnStart.setEnabled(true);
-				
+
 				txtTomcatPort.setEnabled(true);
 				txtMySqlPort.setEnabled(true);
 			}
